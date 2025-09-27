@@ -1,4 +1,5 @@
 import re
+import csv
 from server import mcp
 
 
@@ -31,3 +32,37 @@ def split_unique_word(text: str) -> list[str]:
             uniques.append(capitalized_word)
 
     return uniques
+
+
+@mcp.tool()
+def split_unique_sentences(text: str) -> list[str]:
+    """
+    Split song lyrics by line breaks, remove duplicates (ignoring case/spacing),
+    and capitalize the first character of each line.
+    """
+    lines = text.split("\n")
+    seen = set()
+    unique_lines = []
+
+    for line in lines:
+        cleaned = line.strip()
+        normalized = re.sub(r"\s+", " ", cleaned).lower()
+
+        if cleaned and normalized not in seen:
+            seen.add(normalized)
+            capitalized = cleaned[0].upper() + cleaned[1:] if cleaned else ""
+            unique_lines.append(capitalized)
+
+    return unique_lines
+
+
+@mcp.tool()
+def save_csv_to_file(pairs: list[list[str]], filename: str = "anki_cards.csv") -> str:
+    """
+    Saves a 2D list of [original, translation] to a CSV file on disk.
+    Returns the file path.
+    """
+    with open(filename, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerows(pairs)
+    return filename
